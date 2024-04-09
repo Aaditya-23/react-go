@@ -16,7 +16,6 @@ func Mount() *chi.Mux {
 	})
 
 	r.Post("/auth-with-email", authWithEmail)
-	r.Post("/auth-with-google", authWithGoogle)
 	r.Get("/auth-with-github", authWithGithub)
 	r.Post("/verify-magic-token", verifyMagicToken)
 	r.Post("/check-registered-magic-token", checkRegisteredMagicToken)

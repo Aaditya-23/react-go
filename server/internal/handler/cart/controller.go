@@ -6,6 +6,7 @@ import (
 
 	"github.com/Aaditya-23/server/internal/database"
 	"github.com/Aaditya-23/server/internal/utils"
+	"github.com/aaditya-23/mars"
 )
 
 func fetchCart(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +39,8 @@ func updateCart(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("userId").(int64)
 
 	type ResBody struct {
-		Type      string             `json:"type" validate:"oneof=add remove"`
-		ProductId *int64             `json:"productId" validate:"required"`
+		Type      *string            `json:"type"`
+		ProductId *int64             `json:"productId"`
 		Variant   *map[string]string `json:"variant"`
 	}
 
@@ -49,13 +50,26 @@ func updateCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	errs := m.Struct(&body).
+		Fields(
+			m.String(body.Type, "type").IsOneOf([]string{"add", "remove"}),
+			m.Number(body.ProductId, "productId").Min(1),
+			m.Map(body.Variant, "variant").Optional(),
+		).
+		Parse()
+
+	if len(errs) > 0 {
+		utils.ToJSON(w, 400, utils.ErrResponse{Error: errs[0].Message})
+		return
+	}
+
 	cartId, err := database.GetCartId(userId)
 	if err != nil {
 		utils.ToJSON(w, 500, utils.ErrResponse{Error: "Internal Server Error"})
 		return
 	}
 
-	if body.Type == "add" {
+	if *body.Type == "add" {
 		cartItemId, hasVariants, err := database.CheckProductVariants(cartId, *body.ProductId)
 		if err == sql.ErrNoRows {
 			containVariants, err := database.ProductHasVariants(*body.ProductId)

@@ -9,8 +9,7 @@ type NewProduct struct {
 	Name               string
 	Description        string
 	Price              float64
-	DiscountPercentage float64
-	ImageKeys          []string
+	DiscountPercentage *float64
 }
 
 type NewProductWithVariants struct {
@@ -31,12 +30,12 @@ type Product struct {
 }
 
 func CreateProduct(product NewProduct) error {
-	cols := []string{"name", "description", "price", "discount_percentage"}
-	values := []any{product.Name, product.Description, product.Price, product.DiscountPercentage}
+	cols := []string{"name", "description", "price"}
+	values := []any{product.Name, product.Description, product.Price}
 
-	if len(product.ImageKeys) > 0 {
-		cols = append(cols, "image_keys")
-		values = append(values, product.ImageKeys)
+	if product.DiscountPercentage != nil {
+		cols = append(cols, "discount_percentage")
+		values = append(values, *product.DiscountPercentage)
 	}
 
 	query := `INSERT INTO products (`

@@ -7,18 +7,19 @@ import (
 
 	"github.com/Aaditya-23/server/internal/database"
 	"github.com/Aaditya-23/server/internal/utils"
+	m "github.com/aaditya-23/mars"
 	"github.com/go-chi/chi/v5"
 )
 
 func createProduct(w http.ResponseWriter, r *http.Request) {
 
 	type ResBody struct {
-		Name               string           `json:"name" validate:"required"`
-		Description        string           `json:"description" validate:"required"`
-		Price              *float64         `json:"price" validate:"required_with=DiscountPercentage"`
-		DiscountPercentage float64          `json:"discountPercentage"`
-		ImageKeys          []string         `json:"imageKeys"`
-		Variants           []map[string]any `json:"variants" validate:"required_without=Price"`
+		Name               string   `json:"name"`
+		Description        string   `json:"description"`
+		Price              *float64 `json:"price"`
+		DiscountPercentage *float64 `json:"discountPercentage"`
+		// ImageKeys          []string         `json:"imageKeys"`
+		Variants *[]map[string]any `json:"variants"`
 	}
 
 	var body ResBody
@@ -29,9 +30,55 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(body); err != nil {
-		println(err.Error())
-		utils.ToJSON(w, 400, utils.ErrResponse{Error: "Invalid Request Body"})
+	errs := m.Struct(&body).
+		Fields(
+			m.String(&body.Name, "name").Min(1),
+			m.String(&body.Description, "description").Min(1),
+			m.Number(body.Price, "price").Optional(),
+			m.Number(body.DiscountPercentage, "discountPercentage").Optional(),
+			m.Slice(body.Variants, "variants").Optional().Refine(func(variants []map[string]any) m.RefineError {
+				for _, v := range variants {
+					price, ok := v["price"]
+					if !ok {
+						return m.NewRefineError("every variant must have a price", m.CODEREQUIRED)
+					}
+					_, ok = price.(float64)
+					if !ok {
+						return m.NewRefineError("price must be of type integer", m.CODEINVALIDTYPE)
+					}
+
+					discountPercentage, ok := v["discountPercentage"]
+					if ok {
+						if _, ok := discountPercentage.(float64); !ok {
+							return m.NewRefineError("discount percentage must be of type integer", m.CODEINVALIDTYPE)
+						}
+					}
+
+					for key, value := range v {
+						if key == "price" || key == "discountPercentage" {
+							continue
+						}
+
+						if _, ok := value.(string); !ok {
+							return m.NewRefineError("value of variant-type must be of type string", m.CODEINVALIDTYPE)
+						}
+					}
+				}
+
+				return nil
+			}),
+		).
+		Refine(func(rb ResBody) m.RefineError {
+			if rb.Price == nil && rb.Variants == nil {
+				return m.NewRefineError("Price or Variants is required", m.CODEREQUIRED)
+			}
+
+			return nil
+		}).
+		Parse()
+
+	if len(errs) > 0 {
+		utils.ToJSON(w, 400, utils.ErrResponse{Error: errs[0].Message})
 		return
 	}
 
@@ -41,7 +88,7 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 			Description:        body.Description,
 			Price:              *body.Price,
 			DiscountPercentage: body.DiscountPercentage,
-			ImageKeys:          body.ImageKeys})
+		})
 		if err != nil {
 			println("error occured while creating the product", err.Error())
 			utils.ToJSON(w, 500, utils.ErrResponse{Error: "Internal Server Error"})
@@ -52,16 +99,10 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateVariants(body.Variants); err != nil {
-		utils.ToJSON(w, 400, utils.ErrResponse{Error: err.Error()})
-		return
-	}
-
 	if err := database.CreateProductWithVariants(database.NewProductWithVariants{
 		Name:        body.Name,
 		Description: body.Description,
-		ImageKeys:   body.ImageKeys,
-		Variants:    body.Variants,
+		Variants:    *body.Variants,
 	}); err != nil {
 		println("error occured while creating a product with variants", err.Error())
 		utils.ToJSON(w, 500, utils.ErrResponse{Error: "Internal Server Error"})
@@ -128,7 +169,7 @@ func fetchProduct(w http.ResponseWriter, r *http.Request) {
 
 func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	type ResBody struct {
-		ProductId int64 `json:"productId" validate:"required"`
+		ProductId *int64 `json:"productId"`
 	}
 
 	var body ResBody
@@ -137,7 +178,13 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := database.DeleteProduct(body.ProductId); err != nil {
+	errs := m.Number(body.ProductId, "productId").Parse()
+	if len(errs) > 0 {
+		utils.ToJSON(w, 400, utils.ErrResponse{Error: errs[0].Message})
+		return
+	}
+
+	if err := database.DeleteProduct(*body.ProductId); err != nil {
 		println("an error occured while deleting the product,", err.Error())
 		utils.ToJSON(w, 500, nil)
 		return
