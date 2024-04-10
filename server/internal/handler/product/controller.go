@@ -2,6 +2,7 @@ package product_handler
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -36,21 +37,21 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 			m.String(&body.Description, "description").Min(1),
 			m.Number(body.Price, "price").Optional(),
 			m.Number(body.DiscountPercentage, "discountPercentage").Optional(),
-			m.Slice(body.Variants, "variants").Optional().Refine(func(variants []map[string]any) m.RefineError {
+			m.Slice(body.Variants, "variants").Optional().Refine(func(variants []map[string]any) error {
 				for _, v := range variants {
 					price, ok := v["price"]
 					if !ok {
-						return m.NewRefineError("every variant must have a price", m.CODEREQUIRED)
+						return errors.New("every variant must have a price")
 					}
 					_, ok = price.(float64)
 					if !ok {
-						return m.NewRefineError("price must be of type integer", m.CODEINVALIDTYPE)
+						return errors.New("price must be of type integer")
 					}
 
 					discountPercentage, ok := v["discountPercentage"]
 					if ok {
 						if _, ok := discountPercentage.(float64); !ok {
-							return m.NewRefineError("discount percentage must be of type integer", m.CODEINVALIDTYPE)
+							return errors.New("discount percentage must be of type integer")
 						}
 					}
 
@@ -60,7 +61,7 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 						}
 
 						if _, ok := value.(string); !ok {
-							return m.NewRefineError("value of variant-type must be of type string", m.CODEINVALIDTYPE)
+							return errors.New("value of variant-type must be of type string")
 						}
 					}
 				}
@@ -68,9 +69,9 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 				return nil
 			}),
 		).
-		Refine(func(rb ResBody) m.RefineError {
+		Refine(func(rb ResBody) error {
 			if rb.Price == nil && rb.Variants == nil {
-				return m.NewRefineError("Price or Variants is required", m.CODEREQUIRED)
+				return errors.New("price or variants is required")
 			}
 
 			return nil

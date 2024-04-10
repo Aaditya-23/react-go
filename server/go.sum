@@ -1,5 +1,7 @@
 github.com/aaditya-23/mars v1.2.0 h1:UWpHRM1o47V5aUdvjslBHdgvGfjVcS4TKygzea+dy5U=
 github.com/aaditya-23/mars v1.2.0/go.mod h1:C2V0oUR8c0nk1h7EhHCUJxHE+VEa2Azah4vKJ6U2NX0=
+github.com/aaditya-23/mars v1.4.0 h1:KQua8St6qhecfvzApmyHaBX1/2u3L0sRyEalh+BJ/gU=
+github.com/aaditya-23/mars v1.4.0/go.mod h1:C2V0oUR8c0nk1h7EhHCUJxHE+VEa2Azah4vKJ6U2NX0=
 github.com/go-chi/chi/v5 v5.0.11 h1:BnpYbFZ3T3S1WMpD79r7R5ThWX40TaFB7L31Y8xqSwA=
 github.com/go-chi/chi/v5 v5.0.11/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
 github.com/go-chi/cors v1.2.1 h1:xEC8UT3Rlp2QuWNEr4Fs/c2EAGVKBwy/1vHx3bppil4=

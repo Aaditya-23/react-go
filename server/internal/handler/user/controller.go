@@ -3,14 +3,15 @@ package user_handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Aaditya-23/server/internal/auth"
-	"github.com/Aaditya-23/server/internal/database"
-	"github.com/Aaditya-23/server/internal/utils"
-	"github.com/aaditya-23/mars"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/Aaditya-23/server/internal/auth"
+	"github.com/Aaditya-23/server/internal/database"
+	"github.com/Aaditya-23/server/internal/utils"
+	"github.com/aaditya-23/mars"
 )
 
 func authWithEmail(w http.ResponseWriter, r *http.Request) {
@@ -110,8 +111,7 @@ func checkRegisteredMagicToken(w http.ResponseWriter, r *http.Request) {
 	type ResBody struct {
 		TokenId *int64 `json:"tokenId"`
 	}
-	const CodeInvalidToken = "invalid-token"
-
+	
 	var body ResBody
 	if err := utils.DecodeJSON(r, &body); err != nil {
 		println("error occured while decoding json", err.Error())
@@ -120,28 +120,21 @@ func checkRegisteredMagicToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	errs := m.Number(body.TokenId, "tokenId").
-		Refine(func(tokenId int64) m.RefineError {
-			isTokenRegistered, err := auth.CheckRegisteredMagicToken(tokenId)
-			if err != nil {
-				return m.NewRefineError(err.Error(), m.CODEDBERROR)
-			} else if !isTokenRegistered {
-				return m.NewRefineError("Invalid Token", CodeInvalidToken)
-			}
-
-			return nil
-		}).
 		Parse()
 
-	for _, err := range errs {
-		if err.Code == m.CODEDBERROR {
-			println("error occured while verifying magic token", err.Message)
-			utils.ToJSON(w, 500, utils.ErrResponse{Error: "Internal Server Error"})
-		} else if err.Code == CodeInvalidToken {
-			utils.ToJSON(w, 400, utils.ErrResponse{Error: err.Message})
-		} else {
-			utils.ToJSON(w, 400, utils.ErrResponse{Error: err.Message})
-		}
+	if len(errs) > 0 {
+		utils.ToJSON(w, 400, utils.ErrResponse{Error: errs[0].Message})
+		return
+	}
 
+	isTokenRegistered, err := auth.CheckRegisteredMagicToken(*body.TokenId)
+	if err != nil {
+		utils.ToJSON(w, 500, utils.ErrResponse{Error: "Internal Server Error"})
+		return
+	}
+
+	if !isTokenRegistered {
+		utils.ToJSON(w, 400, utils.ErrResponse{Error: "Invalid Token"})
 		return
 	}
 
