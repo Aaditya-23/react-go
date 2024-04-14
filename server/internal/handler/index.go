@@ -12,7 +12,7 @@ func Mount() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST"},
 		AllowCredentials: true,
 	}).Handler)
