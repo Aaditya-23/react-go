@@ -170,7 +170,7 @@ func authWithGithub(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirect := func(isSuccess bool) {
-		URL := "http://localhost:3000/auth?"
+		URL := "https://react-go-rouge.vercel.app/auth?"
 		if isSuccess {
 			URL += "success=auth%20successful"
 		} else {

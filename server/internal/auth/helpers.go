@@ -33,5 +33,5 @@ func generateMagicToken(userId int64) (string, int64, error) {
 }
 
 func generateLinkFromToken(token string) string {
-	return fmt.Sprintf("%s/auth/magic-link?token=%s", "http://localhost:3000", token)
+	return fmt.Sprintf("%s/auth/magic-link?token=%s", "https://react-go-rouge.vercel.app/", token)
 }
