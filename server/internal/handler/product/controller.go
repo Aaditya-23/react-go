@@ -8,7 +8,7 @@ import (
 
 	"github.com/Aaditya-23/server/internal/database"
 	"github.com/Aaditya-23/server/internal/utils"
-	m "github.com/aaditya-23/mars"
+	v "github.com/aaditya-23/validator"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -31,13 +31,13 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.Struct(&body).
+	errs := v.Struct(&body).
 		Fields(
-			m.String(&body.Name, "name").Min(1),
-			m.String(&body.Description, "description").Min(1),
-			m.Number(body.Price, "price").Optional(),
-			m.Number(body.DiscountPercentage, "discountPercentage").Optional(),
-			m.Slice(body.Variants, "variants").Optional().Refine(func(variants []map[string]any) error {
+			v.String(&body.Name, "name").Min(1),
+			v.String(&body.Description, "description").Min(1),
+			v.Number(body.Price, "price").Optional(),
+			v.Number(body.DiscountPercentage, "discountPercentage").Optional(),
+			v.Slice(body.Variants, "variants").Optional().Refine(func(variants []map[string]any) error {
 				for _, v := range variants {
 					price, ok := v["price"]
 					if !ok {
@@ -179,7 +179,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.Number(body.ProductId, "productId").Parse()
+	errs := v.Number(body.ProductId, "productId").Parse()
 	if len(errs) > 0 {
 		utils.ToJSON(w, 400, utils.ErrResponse{Error: errs[0].Message})
 		return

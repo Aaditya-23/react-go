@@ -6,7 +6,7 @@ import (
 
 	"github.com/Aaditya-23/server/internal/database"
 	"github.com/Aaditya-23/server/internal/utils"
-	"github.com/aaditya-23/mars"
+	v "github.com/aaditya-23/validator"
 )
 
 func fetchCart(w http.ResponseWriter, r *http.Request) {
@@ -50,11 +50,11 @@ func updateCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.Struct(&body).
+	errs := v.Struct(&body).
 		Fields(
-			m.String(body.Type, "type").IsOneOf([]string{"add", "remove"}),
-			m.Number(body.ProductId, "productId").Min(1),
-			m.Map(body.Variant, "variant").Optional(),
+			v.String(body.Type, "type").IsOneOf([]string{"add", "remove"}),
+			v.Number(body.ProductId, "productId").Min(1),
+			v.Map(body.Variant, "variant").Optional(),
 		).
 		Parse()
 

@@ -11,7 +11,7 @@ import (
 	"github.com/Aaditya-23/server/internal/auth"
 	"github.com/Aaditya-23/server/internal/database"
 	"github.com/Aaditya-23/server/internal/utils"
-	"github.com/aaditya-23/mars"
+	v "github.com/aaditya-23/validator"
 )
 
 func authWithEmail(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,7 @@ func authWithEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.String(&body.Email, "email").
+	errs := v.String(&body.Email, "email").
 		Email().
 		Parse()
 
@@ -86,7 +86,7 @@ func verifyMagicToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.String(body.Token, "token").
+	errs := v.String(body.Token, "token").
 		AbortEarly().
 		Parse()
 
@@ -111,7 +111,7 @@ func checkRegisteredMagicToken(w http.ResponseWriter, r *http.Request) {
 	type ResBody struct {
 		TokenId *int64 `json:"tokenId"`
 	}
-	
+
 	var body ResBody
 	if err := utils.DecodeJSON(r, &body); err != nil {
 		println("error occured while decoding json", err.Error())
@@ -119,7 +119,7 @@ func checkRegisteredMagicToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := m.Number(body.TokenId, "tokenId").
+	errs := v.Number(body.TokenId, "tokenId").
 		Parse()
 
 	if len(errs) > 0 {
